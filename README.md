@@ -135,28 +135,6 @@ O **WardScore** é uma aplicação web moderna que revoluciona a forma como os j
 
    Abra [http://localhost:3000](http://localhost:3000) no seu navegador
 
-## 📊 Capturas de Tela
-
-<div align="center">
-
-### 🏠 Landing Page
-
-![Landing Page](https://via.placeholder.com/800x400/0F1419/C8AA6E?text=Landing+Page)
-
-### 📤 Upload de Replay
-
-![Upload](https://via.placeholder.com/800x400/0F1419/0596AA?text=Upload+Interface)
-
-### 📊 Análise Detalhada
-
-![Analysis](https://via.placeholder.com/800x400/0F1419/C8AA6E?text=Detailed+Analysis)
-
-### 🏆 Ranking Global
-
-![Ranking](https://via.placeholder.com/800x400/0F1419/0596AA?text=Global+Ranking)
-
-</div>
-
 ## 🎨 Design System
 
 ### 🎨 Paleta de Cores
@@ -237,15 +215,7 @@ npm run test:coverage
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/seu-usuario/wardtracker-client)
 
-### 🐳 Docker
-
-```bash
-# Build da imagem
-docker build -t wardtracker-client .
-
-# Executar container
-docker run -p 3000:3000 wardtracker-client
-```
+````
 
 ### 🏗️ Build Manual
 
@@ -255,7 +225,7 @@ npm run build
 
 # Iniciar servidor
 npm run start
-```
+````
 
 ## 🤝 Contribuindo
 
@@ -289,10 +259,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 🆘 Suporte
 
-- 📧 **Email**: suporte@wardtracker.com
-- 💬 **Discord**: [Servidor da Comunidade](https://discord.gg/wardtracker)
-- 📱 **Twitter**: [@WardTracker](https://twitter.com/wardtracker)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/seu-usuario/wardtracker-client/issues)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/fferreiracanedo/wardtracker-web/issues)
 
 ---
 
@@ -300,16 +267,14 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 👨‍💻 Criador
 
-<img src="https://github.com/seu-usuario.png" width="150" height="150" style="border-radius: 50%;" alt="Foto do Criador"/>
+<img src="https://github.com/fferreiraanedo.png" width="150" height="150" style="border-radius: 50%;" alt="Foto do Criador"/>
 
 ### **Mateus - Desenvolvedor Full Stack**
 
 _Apaixonado por tecnologia e League of Legends_ 🎮
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/seu-perfil)
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/seu-usuario)
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/seu-usuario)
-[![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge&logo=todoist&logoColor=white)](https://seu-portfolio.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/fferreiracanedo/)
+[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://x.com/MateusTechGuy)
 
 > _"Criar ferramentas que ajudam jogadores a melhorar é minha paixão. O WardScore nasceu da necessidade de entender melhor a complexidade da visão de jogo no League of Legends."_
 
@@ -324,6 +289,6 @@ _Apaixonado por tecnologia e League of Legends_ 🎮
 
 <sub>⭐ **Gostou do projeto?** Deixe uma estrela no repositório!</sub>
 
-<sub>Feito com ❤️ e muito ☕ por [Mateus](https://github.com/seu-usuario)</sub>
+<sub>Feito com ❤️ e muito ☕ por [Mateus](https://github.com/fferreiracanedo)</sub>
 
 </div>
