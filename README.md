@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![WardScore Logo](https://via.placeholder.com/200x100/C8AA6E/000000?text=WardScore)
+![WardScore Logo](assets/Gemini_Generated_Image_lhaot2lhaot2lhao.png)
 
 **Transforme sua gameplay com análise de IA**
 
