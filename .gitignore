@@ -1,0 +1,69 @@
+# Dependências
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Arquivos de produção
+/build
+/dist
+/.next/
+/out/
+
+# Arquivos de runtime
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos de ambiente
+.env
+.env*.local
+
+# Arquivos de logs
+*.log
+logs/
+
+# Arquivos de cache
+.cache/
+.parcel-cache/
+
+# Arquivos de teste
+/coverage
+/.nyc_output
+
+# Arquivos de desenvolvimento local
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos de sistema
+Thumbs.db
+Desktop.ini
+
+# Arquivos temporários
+*.tmp
+*.temp
+.temp/
+
+# Arquivos de deploy
+.vercel
+.netlify
+.firebase/
+
+# Arquivos de backup
+*.bak
+*.backup
+
+# Arquivos de profiling
+*.cpuprofile
+
+# Arquivos de bundler
+.webpack/
+.rollup/ 
