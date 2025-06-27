@@ -2,7 +2,12 @@
 
 <div align="center">
 
-<img src="assets/Gemini_Generated_Image_lhaot2lhaot2lhao.png" alt="WardScore Logo" width="300" height="auto" />
+```
+    ╔══════════════════════════════════╗
+    ║        🏆 WARD SCORE 🏆         ║
+    ║     League of Legends Analysis   ║
+    ╚══════════════════════════════════╝
+```
 
 **Transforme sua gameplay com análise de IA**
 
