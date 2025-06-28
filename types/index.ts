@@ -2,7 +2,8 @@
 export interface User {
     id: string;
     riotId: string;
-    username: string;
+    gameName: string;
+    tagLine: string;
     avatarUrl?: string;
     isPro: boolean;
     createdAt: string;
