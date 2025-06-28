@@ -155,18 +155,18 @@ enum ReplayStatus {
 
 #### 📁 **File Upload**
 
-- [ ] Implementar upload de arquivos .rofl real
-- [ ] Configurar validação de arquivos (tipo, tamanho)
-- [ ] Implementar progress tracking real
-- [ ] Configurar storage: local ou cloud (AWS S3/UploadThing)
-- [ ] Implementar cleanup de arquivos antigos
+- [x] Implementar upload de arquivos .rofl real
+- [x] Configurar validação de arquivos (tipo, tamanho)
+- [x] Implementar progress tracking real
+- [x] Configurar storage: local ou cloud (AWS S3/UploadThing)
+- [x] Implementar cleanup de arquivos antigos
 
 #### ⚡ **File Processing**
 
-- [ ] Pesquisar/implementar parser de arquivos .rofl
-- [ ] Criar queue system para processamento (Bull/Agenda)
-- [ ] Implementar extração de dados do replay
-- [ ] Configurar notificações de status
+- [x] Pesquisar/implementar parser de arquivos .rofl (mock)
+- [x] Criar queue system para processamento (Bull/Agenda)
+- [x] Implementar extração de dados do replay (mock)
+- [x] Configurar notificações de status
 
 ### 📊 **1.4 WardScore Algorithm**
 
