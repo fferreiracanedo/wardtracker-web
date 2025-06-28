@@ -66,4 +66,8 @@ Desktop.ini
 
 # Arquivos de bundler
 .webpack/
-.rollup/ 
+.rollup/
+
+# Upload storage
+uploads/
+*.rofl 

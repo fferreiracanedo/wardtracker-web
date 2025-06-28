@@ -81,7 +81,7 @@ export interface UploadState {
     progress: number;
     isUploading: boolean;
     error: string | null;
-    status: 'idle' | 'uploading' | 'success' | 'error';
+    status: 'idle' | 'uploading' | 'processing' | 'success' | 'error';
 }
 
 // Tipos de API

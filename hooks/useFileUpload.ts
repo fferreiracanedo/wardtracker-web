@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { UploadState } from '@/types'
@@ -14,6 +14,9 @@ export const useFileUpload = () => {
         error: null,
         status: 'idle',
     })
+    const [processingJobId, setProcessingJobId] = useState<string | null>(null)
+    const [processingStatus, setProcessingStatus] = useState<string>('')
+    const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
     const resetUpload = useCallback(() => {
         setUploadState({
@@ -23,6 +26,14 @@ export const useFileUpload = () => {
             error: null,
             status: 'idle',
         })
+        setProcessingJobId(null)
+        setProcessingStatus('')
+
+        // Limpar polling se existir
+        if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current)
+            pollIntervalRef.current = null
+        }
     }, [])
 
     const validateFile = useCallback((file: File): string | null => {
@@ -88,18 +99,22 @@ export const useFileUpload = () => {
             )
 
             if (response.success) {
+                const matchId = response.data.matchId
+
                 setUploadState(prev => ({
                     ...prev,
-                    status: 'success',
-                    isUploading: false,
+                    status: 'processing',
+                    isUploading: true,
                     progress: 100,
                 }))
 
+                setProcessingJobId(matchId)
+                setProcessingStatus('Arquivo enviado! Iniciando processamento...')
+
                 toast.success('Arquivo enviado com sucesso! Processando análise...')
 
-                // Redirecionar para a página de análise
-                const matchId = response.data.matchId
-                router.push(`/analysis/${matchId}`)
+                // Iniciar polling do status
+                startStatusPolling(matchId)
             } else {
                 throw new Error(response.message || 'Erro desconhecido no upload')
             }
@@ -118,11 +133,90 @@ export const useFileUpload = () => {
         }
     }, [uploadState.file, router])
 
+    // Polling do status de processamento
+    const startStatusPolling = useCallback((jobId: string) => {
+        pollIntervalRef.current = setInterval(async () => {
+            try {
+                const response = await fetch(`/api/queue/${jobId}`)
+                const data = await response.json()
+
+                if (data.success) {
+                    const job = data.data
+
+                    setUploadState(prev => ({
+                        ...prev,
+                        progress: job.progress,
+                    }))
+
+                    // Atualizar status de processamento
+                    const statusMap = {
+                        'waiting': 'Na fila de processamento...',
+                        'processing': `Processando... (${job.progress}%)`,
+                        'completed': 'Análise concluída!',
+                        'failed': 'Erro no processamento'
+                    }
+
+                    setProcessingStatus(statusMap[job.status as keyof typeof statusMap] || 'Processando...')
+
+                    // Se completou ou falhou, parar polling
+                    if (job.status === 'completed') {
+                        setUploadState(prev => ({
+                            ...prev,
+                            status: 'success',
+                            isUploading: false,
+                        }))
+
+                        toast.success('Análise concluída! Redirecionando...')
+
+                        // Parar polling e redirecionar
+                        if (pollIntervalRef.current) {
+                            clearInterval(pollIntervalRef.current)
+                            pollIntervalRef.current = null
+                        }
+
+                        setTimeout(() => {
+                            router.push(`/analysis/${jobId}`)
+                        }, 1500)
+
+                    } else if (job.status === 'failed') {
+                        setUploadState(prev => ({
+                            ...prev,
+                            status: 'error',
+                            isUploading: false,
+                            error: job.error || 'Erro no processamento'
+                        }))
+
+                        toast.error('Erro no processamento: ' + (job.error || 'Erro desconhecido'))
+
+                        // Parar polling
+                        if (pollIntervalRef.current) {
+                            clearInterval(pollIntervalRef.current)
+                            pollIntervalRef.current = null
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao verificar status:', error)
+            }
+        }, 2000) // Verificar a cada 2 segundos
+    }, [router])
+
+    // Cleanup no unmount
+    useEffect(() => {
+        return () => {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current)
+            }
+        }
+    }, [])
+
     return {
         ...uploadState,
         selectFile,
         uploadFile,
         resetUpload,
         canUpload: uploadState.file !== null && !uploadState.isUploading,
+        processingStatus,
+        jobId: processingJobId,
     }
 } 

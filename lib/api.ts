@@ -114,34 +114,63 @@ class ApiClient {
 
 export const apiClient = new ApiClient(API_BASE_URL)
 
-// Funções específicas da API com simulação para demonstração
-export async function uploadReplay(file: File, onProgress?: (progress: number) => void) {
-    // Simulação de upload para demonstração
-    return new Promise<ApiResponse<any>>((resolve) => {
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
+// Funções específicas da API - Upload Real
+export async function uploadReplay(file: File, onProgress?: (progress: number) => void): Promise<ApiResponse<any>> {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData()
+        formData.append('replay', file)
 
-                // Simular resposta de sucesso
-                setTimeout(() => {
-                    resolve({
-                        success: true,
-                        data: {
-                            matchId: "BR1_2845234567",
-                            message: "Upload realizado com sucesso"
-                        }
-                    });
-                }, 500);
-            }
+        const xhr = new XMLHttpRequest()
 
-            if (onProgress) {
-                onProgress(Math.min(progress, 100));
+        // Progress tracking real
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable && onProgress) {
+                const progress = (e.loaded / e.total) * 100
+                onProgress(progress)
             }
-        }, 100);
-    });
+        })
+
+        // Success handler
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const response = JSON.parse(xhr.responseText)
+                    console.log('✅ Upload bem-sucedido:', response)
+                    resolve(response)
+                } catch (error) {
+                    console.error('❌ Erro ao processar resposta:', error)
+                    reject(new Error('Erro ao processar resposta do servidor'))
+                }
+            } else {
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText)
+                    reject(new Error(errorResponse.message || `Erro HTTP ${xhr.status}`))
+                } catch {
+                    reject(new Error(`Erro no upload: HTTP ${xhr.status}`))
+                }
+            }
+        })
+
+        // Error handler
+        xhr.addEventListener('error', () => {
+            console.error('❌ Erro de conexão no upload')
+            reject(new Error('Erro de conexão. Verifique sua internet e tente novamente.'))
+        })
+
+        // Timeout handler
+        xhr.addEventListener('timeout', () => {
+            console.error('❌ Timeout no upload')
+            reject(new Error('Upload demorou muito. Tente novamente.'))
+        })
+
+        // Configure request
+        xhr.open('POST', '/api/upload')
+        xhr.timeout = 60000 // 60 segundos timeout
+
+        // Send request
+        console.log('📤 Iniciando upload:', file.name, `(${(file.size / 1024 / 1024).toFixed(2)}MB)`)
+        xhr.send(formData)
+    })
 }
 
 export async function getReplayAnalysis(matchId: string) {
