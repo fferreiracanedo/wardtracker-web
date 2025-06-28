@@ -184,7 +184,9 @@ export default function RankingTable({
             <RankingRow
               key={player.rank}
               player={player}
-              isCurrentUser={user?.username === player.name}
+              isCurrentUser={
+                player.name === `${user?.gameName}#${user?.tagLine}`
+              }
             />
           ))}
         </div>
