@@ -16,7 +16,7 @@
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.3-38B2AC)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[🚀 Demo](https://wardtracker-client.vercel.app) • [📚 Documentação](docs/) • [🐛 Reportar Bug](issues/) • [💡 Sugerir Feature](issues/)
+[🚀 Demo](https://wardtracker-client.vercel.app) • [📋 Roadmap](ROADMAP.md) • [🐛 Reportar Bug](issues/) • [💡 Sugerir Feature](issues/)
 
 </div>
 
