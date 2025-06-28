@@ -200,7 +200,7 @@ export default function Sidebar({ className }: { className?: string }) {
       {/* Sidebar for Desktop */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col bg-background border-r sticky top-0 h-screen transition-all duration-300",
+          "hidden lg:flex flex-col bg-background border-r transition-all duration-300",
           isDesktopCollapsed ? "w-20" : "w-64",
           className
         )}
