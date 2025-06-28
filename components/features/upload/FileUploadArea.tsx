@@ -9,22 +9,24 @@ import { useFileUpload } from "@/hooks/useFileUpload";
 import { formatFileSize } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-export default function FileUploadArea() {
+type UseFileUploadReturn = ReturnType<typeof useFileUpload>;
+
+interface FileUploadAreaProps {
+  uploadHook: UseFileUploadReturn;
+}
+
+export default function FileUploadArea({ uploadHook }: FileUploadAreaProps) {
   const {
-    file,
-    progress,
-    isUploading,
-    error,
-    status,
+    uploadState,
     selectFile,
     uploadFile,
     resetUpload,
     cancelUpload,
     retryUpload,
     canUpload,
-    processingStatus,
     jobId,
-  } = useFileUpload();
+  } = uploadHook;
+  const { file, progress, isUploading, error, status, phase } = uploadState;
 
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,15 +79,15 @@ export default function FileUploadArea() {
   };
 
   const getStatusText = () => {
+    if (status === "processing") return "Processando...";
     if (isUploading) return "Enviando arquivo...";
-    if (file && !error) return "Arquivo selecionado";
+    if (file && !error) return "Arquivo pronto para envio";
     if (error) return "Erro no arquivo";
     return "Arraste um arquivo .rofl aqui ou clique para selecionar";
   };
 
   const getStatusDescription = () => {
-    if (isUploading && processingStatus) return processingStatus;
-    if (isUploading) return "Por favor, aguarde...";
+    if (isUploading) return phase || "Por favor, aguarde...";
     if (file && !error) return "Clique em 'Enviar Replay' para continuar";
     if (error) return "Verifique o arquivo e tente novamente";
     return "Suporte apenas para arquivos .rofl (máximo 50MB)";
@@ -201,7 +203,7 @@ export default function FileUploadArea() {
               <Progress value={progress} className="w-full h-2" />
               <div className="flex justify-between text-xs text-blue-600">
                 <span>{progress}% concluído</span>
-                <span>{processingStatus || "Analisando replay..."}</span>
+                <span>{phase || "Analisando replay..."}</span>
               </div>
               {jobId && (
                 <div className="text-center text-xs text-blue-500">
@@ -250,22 +252,26 @@ export default function FileUploadArea() {
         {isUploading ? (
           <Button
             onClick={cancelUpload}
-            variant="outline"
             size="lg"
-            className="min-w-[120px] border-red-200 text-red-600 hover:bg-red-50"
+            variant="destructive"
+            className="px-8 min-w-[160px]"
           >
-            ✕ Cancelar
+            <X className="mr-2 h-4 w-4" />
+            Cancelar
           </Button>
-        ) : file && !error ? (
-          <Button
-            onClick={resetUpload}
-            variant="outline"
-            size="lg"
-            className="min-w-[120px]"
-          >
-            🗑️ Limpar
-          </Button>
-        ) : null}
+        ) : (
+          file && (
+            <Button
+              onClick={resetUpload}
+              size="lg"
+              variant="outline"
+              className="px-8 min-w-[160px]"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Limpar
+            </Button>
+          )
+        )}
       </div>
 
       {/* Help Text */}

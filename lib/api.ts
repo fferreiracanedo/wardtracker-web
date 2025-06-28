@@ -220,4 +220,13 @@ export async function createStripeSession(planId: string) {
             sessionId: `sess_demo_${planId}_${Date.now()}`
         }
     };
-} 
+}
+
+export const getJobStatus = async (jobId: string) => {
+    const response = await fetch(`/api/queue/${jobId}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch job status');
+    }
+    const data = await response.json();
+    return data.data; // A rota da API envelopa o job em "data"
+}; 

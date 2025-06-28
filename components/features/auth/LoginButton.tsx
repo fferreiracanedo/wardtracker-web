@@ -1,144 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { LogIn, LogOut } from "lucide-react";
 import { useAuth } from "@/store/authStore";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-interface LoginButtonProps {
-  className?: string;
-  variant?: "default" | "outline" | "ghost";
-  size?: "default" | "sm" | "lg";
-  iconOnly?: boolean;
-}
+export function LoginButton({ isCollapsed }: { isCollapsed?: boolean }) {
+  const router = useRouter();
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
 
-export default function LoginButton({
-  className,
-  variant = "default",
-  size = "default",
-  iconOnly = false,
-}: LoginButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
-
-  const handleRiotLogin = async () => {
-    setIsLoading(true);
-
-    try {
-      // URL base da API para autenticação Riot
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-      const redirectUri = `${window.location.origin}/api/auth/riot/callback`;
-
-      // Construir URL de autorização da Riot
-      const riotAuthUrl = `${apiUrl}/auth/riot?redirect_uri=${encodeURIComponent(
-        redirectUri
-      )}`;
-
-      // Redirecionar para a página de autorização da Riot
-      window.location.href = riotAuthUrl;
-    } catch (error) {
-      console.error("Erro ao iniciar login:", error);
-      toast.error("Erro ao conectar com Riot Games");
-      setIsLoading(false);
-    }
+  const handleLogin = () => {
+    // Redireciona para a rota da API que inicia o fluxo OAuth da Riot
+    router.push("/api/auth/riot");
   };
 
   const handleLogout = () => {
+    // Aqui, futuramente, chamaremos uma rota /api/auth/logout
+    // Por enquanto, apenas limpa o estado local
     logout();
-    toast.success("Logout realizado com sucesso");
+    toast.success("Você foi desconectado.");
   };
 
+  // Exibe um skeleton enquanto verifica o status de autenticação
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-3 p-2">
+        <Skeleton className="h-8 w-8 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+        </div>
+      </div>
+    );
+  }
+
+  // Exibe o usuário logado e o botão de sair
   if (isAuthenticated && user) {
-    if (iconOnly) {
-      return (
+    return (
+      <div className="flex flex-col space-y-2">
+        <div className="text-sm px-3">
+          <p
+            className="font-bold truncate"
+            title={`${user.gameName}#${user.tagLine}`}
+          >
+            {user.gameName}#{user.tagLine}
+          </p>
+          <p className="text-muted-foreground text-xs">Conectado</p>
+        </div>
         <Button
           onClick={handleLogout}
           variant="ghost"
-          size="sm"
-          className={`w-10 h-10 p-0 rounded-full ${className}`}
-          title={`${user.username} - Clique para sair`}
+          className="w-full justify-start"
         >
-          <div className="w-6 h-6 rounded-full bg-lol-gold/20 flex items-center justify-center">
-            <span className="text-lol-gold font-semibold text-xs">
-              {user.username.charAt(0).toUpperCase()}
-            </span>
-          </div>
-        </Button>
-      );
-    }
-
-    return (
-      <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-full bg-lol-gold/20 flex items-center justify-center">
-            <span className="text-lol-gold font-semibold text-sm">
-              {user.username.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <span className="text-sm font-medium">{user.username}</span>
-        </div>
-        <Button onClick={handleLogout} variant="outline" size="sm">
+          <LogOut className="mr-2 h-4 w-4" />
           Sair
         </Button>
       </div>
     );
   }
 
-  if (iconOnly) {
+  // Se a barra estiver recolhida, mostramos apenas o ícone com uma tooltip
+  if (isCollapsed) {
     return (
-      <Button
-        onClick={handleRiotLogin}
-        disabled={isLoading}
-        variant="ghost"
-        size="sm"
-        className={`w-10 h-10 p-0 rounded-lg ${className}`}
-        title="Faça login com sua conta Riot Games"
-      >
-        {isLoading ? (
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-        ) : (
-          <svg
-            className="h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            {/* Logo simplificado da Riot Games */}
-            <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z" />
-          </svg>
-        )}
-      </Button>
+      <TooltipProvider>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button onClick={handleLogin} size="icon" className="w-full">
+              <LogIn className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">Login com Riot</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
+  // Exibe o botão de login se não estiver autenticado
   return (
-    <Button
-      onClick={handleRiotLogin}
-      disabled={isLoading}
-      variant={variant as any}
-      size={size}
-      className={className}
-      aria-label="Faça login com sua conta Riot Games para continuar"
-    >
-      {isLoading ? (
-        <>
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-          Conectando...
-        </>
-      ) : (
-        <>
-          <svg
-            className="mr-2 h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            {/* Logo simplificado da Riot Games */}
-            <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z" />
-          </svg>
-          Login com Riot Games
-        </>
-      )}
+    <Button onClick={handleLogin} className="w-full justify-start">
+      <LogIn className="mr-2 h-4 w-4" />
+      Login com Riot
     </Button>
   );
 }

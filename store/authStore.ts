@@ -8,6 +8,7 @@ interface AuthActions {
     logout: () => void
     setLoading: (loading: boolean) => void
     updateUser: (user: Partial<User>) => void
+    checkAuthStatus: () => Promise<void>
 }
 
 type AuthStore = AuthState & AuthActions
@@ -18,7 +19,7 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             token: null,
             isAuthenticated: false,
-            isLoading: false,
+            isLoading: true,
 
             login: (token: string, user: User) => {
                 apiClient.setToken(token)
@@ -52,6 +53,26 @@ export const useAuthStore = create<AuthStore>()(
                     })
                 }
             },
+
+            checkAuthStatus: async () => {
+                try {
+                    set({ isLoading: true })
+                    const response = await fetch('/api/auth/me')
+                    if (response.ok) {
+                        const data = await response.json()
+                        if (data.isAuthenticated) {
+                            set({ isAuthenticated: true, user: data.user, isLoading: false })
+                        } else {
+                            set({ isAuthenticated: false, user: null, isLoading: false })
+                        }
+                    } else {
+                        set({ isAuthenticated: false, user: null, isLoading: false })
+                    }
+                } catch (error) {
+                    console.error('Falha ao verificar status de autenticação', error)
+                    set({ isAuthenticated: false, user: null, isLoading: false })
+                }
+            },
         }),
         {
             name: 'auth-storage',
@@ -75,5 +96,6 @@ export const useAuth = () => {
         logout: state.logout,
         setLoading: state.setLoading,
         updateUser: state.updateUser,
+        checkAuthStatus: state.checkAuthStatus,
     }))
 } 

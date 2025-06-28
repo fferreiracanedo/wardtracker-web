@@ -1,3 +1,7 @@
+import { ROFLReader, Metadata } from 'rofl-parser.js';
+import { promises as fs } from 'fs';
+import path from 'path';
+
 // Sistema de Queue Mock para processamento de replays
 
 export interface QueueJob {
@@ -5,6 +9,7 @@ export interface QueueJob {
     fileName: string
     status: 'waiting' | 'processing' | 'completed' | 'failed'
     progress: number
+    phase?: string
     createdAt: Date
     startedAt?: Date
     completedAt?: Date
@@ -23,6 +28,7 @@ class ReplayQueue {
             fileName,
             status: 'waiting',
             progress: 0,
+            phase: 'Aguardando na fila',
             createdAt: new Date()
         }
 
@@ -33,6 +39,27 @@ class ReplayQueue {
         this.processQueue()
 
         return job
+    }
+
+    // Cancelar um job
+    cancelJob(id: string): boolean {
+        const job = this.jobs.get(id);
+
+        if (job && (job.status === 'waiting' || job.status === 'processing')) {
+            this.jobs.delete(id);
+            console.log(`🚫 Job cancelado e removido da queue: ${id}`);
+
+            // Se o job cancelado estava sendo processado, permite que o próximo inicie
+            if (this.processing && this.jobs.values().next().value === job) {
+                this.processing = false;
+                this.processQueue();
+            }
+
+            return true;
+        }
+
+        console.log(`⚠️ Tentativa de cancelar job não encontrado ou já finalizado: ${id}`);
+        return false;
     }
 
     // Obter status de um job
@@ -76,9 +103,19 @@ class ReplayQueue {
         job.status = 'processing'
         job.startedAt = new Date()
         job.progress = 0
+        job.phase = 'Iniciando...'
 
         try {
-            // Simular fases do processamento
+            // Caminho para o arquivo de replay salvo
+            const replayFilePath = path.join('./uploads', job.fileName);
+
+            // Ler o arquivo e os metadados
+            console.log(`[QUEUE] Lendo metadados de: ${replayFilePath}`);
+            const reader = new ROFLReader(replayFilePath);
+            const metadata = await reader.getMetadata();
+            console.log(`[QUEUE] Leitura de metadados concluída para o job: ${job.id}`);
+
+            // Simular um tempo de processamento para as fases, já que o parsing é rápido
             const phases = [
                 { name: 'Validando arquivo', duration: 500, progress: 20 },
                 { name: 'Extraindo dados', duration: 1000, progress: 40 },
@@ -89,6 +126,7 @@ class ReplayQueue {
 
             for (const phase of phases) {
                 console.log(`📊 ${job.id}: ${phase.name}...`)
+                job.phase = phase.name
 
                 // Atualizar progresso gradualmente
                 const steps = 5
@@ -101,13 +139,15 @@ class ReplayQueue {
                 }
             }
 
-            // Simular resultado da análise
-            const mockResult = this.generateMockAnalysis(job.fileName)
+            // Gerar resultado da análise com dados reais
+            console.log(`[QUEUE] Chamando generateRealAnalysis para o job: ${job.id}`);
+            const realResult = this.generateRealAnalysis(metadata);
 
             job.status = 'completed'
             job.progress = 100
             job.completedAt = new Date()
-            job.result = mockResult
+            job.result = realResult
+            job.phase = 'Análise concluída'
 
             console.log(`✅ Processamento concluído: ${job.id}`)
 
@@ -117,7 +157,57 @@ class ReplayQueue {
             job.status = 'failed'
             job.error = error instanceof Error ? error.message : 'Erro desconhecido'
             job.completedAt = new Date()
+            job.phase = 'Ocorreu um erro'
         }
+    }
+
+    // Gerar análise com dados reais do parser
+    private generateRealAnalysis(metadata: Metadata): any[] {
+        // ---- PASSO DE DIAGNÓSTICO APRIMORADO ----
+        console.log("[DIAGNÓSTICO] Verificando 'statsJson' recebido do parser...");
+
+        if (!metadata || !metadata.statsJson || !Array.isArray(metadata.statsJson) || metadata.statsJson.length === 0) {
+            console.error("[DIAGNÓSTICO] ERRO: 'statsJson' é inválido, vazio ou não é um array.");
+            console.log("[DIAGNÓSTICO] Conteúdo completo de 'metadata' recebido:", JSON.stringify(metadata, null, 2));
+            throw new Error("Stats JSON inválido ou não encontrado no replay. O arquivo pode estar corrompido ou ser de uma versão incompatível.");
+        }
+
+        console.log("[DIAGNÓSTICO] 'statsJson' parece válido. Imprimindo dados brutos...");
+        console.log("--- DADOS BRUTOS DO REPLAY ---");
+        console.log(JSON.stringify(metadata.statsJson, null, 2));
+        console.log("------------------------------");
+
+        // Nova abordagem: Mapear todos os jogadores em vez de encontrar apenas um.
+        const allPlayersData = metadata.statsJson.map(playerStats => {
+            const visionScore = Number(playerStats.VISION_SCORE || 0);
+            const wardsPlaced = Number(playerStats.WARDS_PLACED || 0);
+            const wardsKilled = Number(playerStats.WARDS_KILLED || 0);
+
+            const wardScore = Math.min(100, Math.floor(
+                (visionScore * 1.5) + (wardsPlaced * 0.5) + (wardsKilled * 1.0)
+            ));
+
+            return {
+                // Usamos o PUUID como identificador único e confiável para cada jogador
+                id: playerStats.PUUID,
+                playerName: playerStats.RIOT_ID_GAME_NAME || playerStats.SUMMONER_NAME,
+                champion: playerStats.SKIN,
+                wardScore,
+                rank: this.getScoreRank(wardScore),
+                gameStats: {
+                    duration: Math.floor(Number(metadata.gameLength) / 60000), // em minutos
+                    wardsPlaced,
+                    wardsDestroyed: wardsKilled,
+                    visionScore,
+                    controlWardsPlaced: Number(playerStats.VISION_WARDS_BOUGHT_IN_GAME || 0),
+                    role: playerStats.TEAM_POSITION,
+                    kda: `${playerStats.CHAMPIONS_KILLED}/${playerStats.NUM_DEATHS}/${playerStats.ASSISTS}`,
+                    win: playerStats.WIN === "Win",
+                },
+            };
+        });
+
+        return allPlayersData;
     }
 
     // Gerar análise mock
@@ -206,7 +296,7 @@ class ReplayQueue {
     cleanup() {
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
 
-        Array.from(this.jobs.entries()).forEach(([id, job]) => {
+        this.jobs.forEach((job, id) => {
             if (job.createdAt < oneHourAgo) {
                 this.jobs.delete(id)
                 console.log(`🗑️ Job removido da queue: ${id}`)
@@ -215,10 +305,23 @@ class ReplayQueue {
     }
 }
 
-// Instância singleton da queue
-export const replayQueue = new ReplayQueue()
+// Prevenir múltiplas instâncias da ReplayQueue em desenvolvimento
+declare global {
+    var replayQueue: ReplayQueue | undefined;
+    var cleanupInterval: NodeJS.Timeout | undefined;
+}
 
-// Auto-cleanup a cada 30 minutos
-setInterval(() => {
-    replayQueue.cleanup()
-}, 30 * 60 * 1000) 
+const replayQueue = global.replayQueue || new ReplayQueue();
+
+if (process.env.NODE_ENV !== 'production') {
+    global.replayQueue = replayQueue;
+}
+
+// Auto-cleanup a cada 30 minutos (garantir que seja configurado apenas uma vez)
+if (!global.cleanupInterval) {
+    global.cleanupInterval = setInterval(() => {
+        replayQueue.cleanup();
+    }, 30 * 60 * 1000);
+}
+
+export { replayQueue };

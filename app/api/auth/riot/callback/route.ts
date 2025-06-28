@@ -1,60 +1,90 @@
 import { NextRequest, NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
 
-export async function GET(request: NextRequest) {
-    const searchParams = request.nextUrl.searchParams
+export async function GET(req: NextRequest) {
+    const { searchParams } = new URL(req.url)
     const code = searchParams.get('code')
-    const error = searchParams.get('error')
-    const state = searchParams.get('state')
 
-    // Se houve erro na autorização
-    if (error) {
-        console.error('Erro na autorização Riot:', error)
-        return NextResponse.redirect(
-            new URL(`/?error=${encodeURIComponent('Erro na autorização com Riot Games')}`, request.url)
-        )
+    if (!code) {
+        return NextResponse.redirect(new URL('/?error=AuthCodeMissing', req.url))
     }
 
-    // Se não recebeu o código de autorização
-    if (!code) {
-        return NextResponse.redirect(
-            new URL(`/?error=${encodeURIComponent('Código de autorização não recebido')}`, request.url)
-        )
+    const { RIOT_CLIENT_ID, RIOT_CLIENT_SECRET, JWT_SECRET, NEXT_PUBLIC_APP_URL } = process.env
+    const redirectUri = `${NEXT_PUBLIC_APP_URL}/api/auth/riot/callback`
+
+    if (!RIOT_CLIENT_ID || !RIOT_CLIENT_SECRET || !JWT_SECRET || !NEXT_PUBLIC_APP_URL) {
+        console.error('Variáveis de ambiente ausentes para o callback da Riot.')
+        return NextResponse.redirect(new URL('/?error=ServerConfigError', req.url))
     }
 
     try {
-        // Trocar código por token no backend
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-        const response = await fetch(`${apiUrl}/auth/riot/callback`, {
+        // 1. Trocar o código de autorização por um access token
+        const tokenResponse = await fetch('https://auth.riotgames.com/token', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Basic ${Buffer.from(`${RIOT_CLIENT_ID}:${RIOT_CLIENT_SECRET}`).toString('base64')}`,
             },
-            body: JSON.stringify({
-                code,
-                redirect_uri: `${request.nextUrl.origin}/api/auth/riot/callback`,
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: redirectUri,
             }),
         })
 
-        const data = await response.json()
+        const tokenData = await tokenResponse.json()
 
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Erro na autenticação')
+        if (!tokenResponse.ok) {
+            // --- PASSO DE DEBUG ---
+            console.log("-----------------------------------------");
+            console.error("DEBUG: Erro ao obter token da Riot.");
+            console.error("Status da Resposta:", tokenResponse.status);
+            console.error("Corpo da Resposta (Erro):", tokenData);
+            console.log("-----------------------------------------");
+            // --- FIM DO PASSO DE DEBUG ---
+            return NextResponse.redirect(new URL(`/?error=${tokenData.error || 'TokenError'}`, req.url))
         }
 
-        // Sucesso - redirecionar para dashboard com token
-        const redirectUrl = new URL('/dashboard', request.url)
-        redirectUrl.searchParams.set('token', data.token)
-        redirectUrl.searchParams.set('user', JSON.stringify(data.user))
+        // 2. Usar o access token para obter informações do usuário
+        const userInfoResponse = await fetch('https://americas.api.riotgames.com/riot/account/v1/accounts/me', {
+            headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`,
+            },
+        })
 
-        return NextResponse.redirect(redirectUrl)
+        const userInfo = await userInfoResponse.json()
+
+        if (!userInfoResponse.ok) {
+            console.error('Erro ao obter informações do usuário da Riot:', userInfo)
+            return NextResponse.redirect(new URL(`/?error=${userInfo.status?.message || 'UserInfoError'}`, req.url))
+        }
+
+        // 3. Preparar dados para o JWT
+        const userPayload = {
+            puuid: userInfo.puuid,
+            gameName: userInfo.gameName,
+            tagLine: userInfo.tagLine,
+        }
+
+        // 4. Criar o JWT
+        const token = jwt.sign(userPayload, JWT_SECRET, { expiresIn: '7d' })
+
+        // 5. Redirecionar para o dashboard e definir o cookie
+        const redirectUrl = new URL('/dashboard', req.url)
+        const response = NextResponse.redirect(redirectUrl)
+
+        response.cookies.set('auth_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 7 dias
+        })
+
+        return response
 
     } catch (error) {
-        console.error('Erro no callback da Riot:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-
-        return NextResponse.redirect(
-            new URL(`/?error=${encodeURIComponent(errorMessage)}`, request.url)
-        )
+        console.error('Erro inesperado no callback da Riot:', error)
+        return NextResponse.redirect(new URL('/?error=InternalServerError', req.url))
     }
 }
 

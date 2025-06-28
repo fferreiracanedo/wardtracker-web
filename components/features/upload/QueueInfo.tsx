@@ -106,76 +106,59 @@ export default function QueueInfo() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 p-2">
       {/* Estatísticas Principais */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Users className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="text-2xl font-bold text-blue-600">
-              {stats.waiting}
-            </div>
-            <div className="text-xs text-muted-foreground">Na Fila</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Activity className="h-5 w-5 text-green-600" />
-            </div>
-            <div className="text-2xl font-bold text-green-600">
-              {stats.processing}
-            </div>
-            <div className="text-xs text-muted-foreground">Processando</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Clock className="h-5 w-5 text-orange-600" />
-            </div>
-            <div className="text-2xl font-bold text-orange-600">
-              {formatTime(stats.estimatedWaitTime)}
-            </div>
-            <div className="text-xs text-muted-foreground">Tempo Estimado</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
-            </div>
-            <div className="text-2xl font-bold text-purple-600">
-              {formatTime(stats.averageProcessingTime)}
-            </div>
-            <div className="text-xs text-muted-foreground">Tempo Médio</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-6">
+        <div className="rounded-xl shadow-md bg-gradient-to-b from-background/80 to-secondary/40 border border-border py-4 px-0 flex flex-col items-center justify-center min-w-[90px]">
+          <Users className="h-6 w-6 mb-1 text-blue-400" />
+          <div className="text-3xl font-extrabold text-blue-300 leading-tight">
+            {stats.waiting}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">Na Fila</div>
+        </div>
+        <div className="rounded-xl shadow-md bg-gradient-to-b from-background/80 to-secondary/40 border border-border py-4 px-0 flex flex-col items-center justify-center min-w-[90px]">
+          <Activity className="h-6 w-6 mb-1 text-green-400" />
+          <div className="text-3xl font-extrabold text-green-300 leading-tight">
+            {stats.processing}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">Processa</div>
+        </div>
+        <div className="rounded-xl shadow-md bg-gradient-to-b from-background/80 to-secondary/40 border border-border py-4 px-0 flex flex-col items-center justify-center min-w-[90px]">
+          <Clock className="h-6 w-6 mb-1 text-orange-400" />
+          <div className="text-3xl font-extrabold text-orange-300 leading-tight">
+            {formatTime(stats.estimatedWaitTime)}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Tempo Estimado
+          </div>
+        </div>
+        <div className="rounded-xl shadow-md bg-gradient-to-b from-background/80 to-secondary/40 border border-border py-4 px-0 flex flex-col items-center justify-center min-w-[90px]">
+          <TrendingUp className="h-6 w-6 mb-1 text-purple-400" />
+          <div className="text-3xl font-extrabold text-purple-300 leading-tight">
+            {formatTime(stats.averageProcessingTime)}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">Tempo Médio</div>
+        </div>
       </div>
 
       {/* Resumo da Fila */}
-      <Card>
+      <Card className="rounded-xl border border-border shadow bg-background/80">
         <CardHeader>
           <CardTitle className="text-lg">Resumo da Fila</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-sm mb-1">
             <span>Total de uploads hoje:</span>
             <Badge variant="secondary">{stats.total}</Badge>
           </div>
-          <div className="flex items-center justify-between text-sm mt-2">
+          <div className="flex items-center justify-between text-sm mt-1">
             <span>Concluídos com sucesso:</span>
             <Badge className="bg-green-100 text-green-800">
               {stats.completed}
             </Badge>
           </div>
           {stats.failed > 0 && (
-            <div className="flex items-center justify-between text-sm mt-2">
+            <div className="flex items-center justify-between text-sm mt-1">
               <span>Falhas:</span>
               <Badge className="bg-red-100 text-red-800">{stats.failed}</Badge>
             </div>
@@ -185,7 +168,7 @@ export default function QueueInfo() {
 
       {/* Jobs Recentes */}
       {stats.recentJobs.length > 0 && (
-        <Card>
+        <Card className="rounded-xl border border-border shadow bg-background/80">
           <CardHeader>
             <CardTitle className="text-lg">Uploads Recentes</CardTitle>
           </CardHeader>
@@ -194,7 +177,7 @@ export default function QueueInfo() {
               {stats.recentJobs.slice(0, 5).map((job) => (
                 <div
                   key={job.id}
-                  className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                  className="flex items-center justify-between p-2 bg-gray-50/10 rounded"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">

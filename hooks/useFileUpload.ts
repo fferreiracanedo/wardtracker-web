@@ -13,9 +13,9 @@ export const useFileUpload = () => {
         isUploading: false,
         error: null,
         status: 'idle',
+        phase: '',
     })
     const [processingJobId, setProcessingJobId] = useState<string | null>(null)
-    const [processingStatus, setProcessingStatus] = useState<string>('')
     const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
     const resetUpload = useCallback(() => {
@@ -25,9 +25,9 @@ export const useFileUpload = () => {
             isUploading: false,
             error: null,
             status: 'idle',
+            phase: '',
         })
         setProcessingJobId(null)
-        setProcessingStatus('')
 
         // Limpar polling se existir
         if (pollIntervalRef.current) {
@@ -36,11 +36,30 @@ export const useFileUpload = () => {
         }
     }, [])
 
-    const cancelUpload = useCallback(() => {
-        // Parar polling
+    const cancelUpload = useCallback(async () => {
+        // Stop polling immediately
         if (pollIntervalRef.current) {
-            clearInterval(pollIntervalRef.current)
-            pollIntervalRef.current = null
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+        }
+
+        // If there's a job being processed on the backend, tell it to cancel
+        if (processingJobId) {
+            try {
+                const encodedJobId = encodeURIComponent(processingJobId);
+                const response = await fetch(`/api/queue/${encodedJobId}`, {
+                    method: 'DELETE',
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    toast.success('Análise cancelada no servidor.');
+                } else {
+                    toast.warning(data.message || 'Não foi possível cancelar o job no servidor (pode já ter finalizado).');
+                }
+            } catch (error) {
+                toast.error('Erro de comunicação ao tentar cancelar o job.');
+            }
         }
 
         setUploadState(prev => ({
@@ -48,14 +67,14 @@ export const useFileUpload = () => {
             isUploading: false,
             status: 'idle',
             progress: 0,
-            error: null
-        }))
-        setProcessingStatus('')
+            error: null,
+            phase: '',
+            file: null, // Limpar o arquivo para um novo upload
+        }));
+        setProcessingJobId(null);
 
-        toast.info('Upload cancelado')
-    }, [])
-
-
+        toast.info('Operação cancelada.');
+    }, [processingJobId]);
 
     const validateFile = useCallback((file: File): string | null => {
         // Validar extensão
@@ -144,10 +163,9 @@ export const useFileUpload = () => {
                     status: 'processing',
                     isUploading: true,
                     progress: 100,
+                    phase: 'Arquivo enviado! Iniciando processamento...',
                 }))
-
                 setProcessingJobId(matchId)
-                setProcessingStatus('Arquivo enviado! Iniciando processamento...')
 
                 toast.success('Arquivo enviado com sucesso! Processando análise...')
 
@@ -181,7 +199,8 @@ export const useFileUpload = () => {
     const startStatusPolling = useCallback((jobId: string) => {
         pollIntervalRef.current = setInterval(async () => {
             try {
-                const response = await fetch(`/api/queue/${jobId}`)
+                const encodedJobId = encodeURIComponent(jobId);
+                const response = await fetch(`/api/queue/${encodedJobId}`)
                 const data = await response.json()
 
                 if (data.success) {
@@ -190,17 +209,8 @@ export const useFileUpload = () => {
                     setUploadState(prev => ({
                         ...prev,
                         progress: job.progress,
+                        phase: job.phase,
                     }))
-
-                    // Atualizar status de processamento
-                    const statusMap = {
-                        'waiting': 'Na fila de processamento...',
-                        'processing': `Processando... (${job.progress}%)`,
-                        'completed': 'Análise concluída!',
-                        'failed': 'Erro no processamento'
-                    }
-
-                    setProcessingStatus(statusMap[job.status as keyof typeof statusMap] || 'Processando...')
 
                     // Se completou ou falhou, parar polling
                     if (job.status === 'completed') {
@@ -219,7 +229,8 @@ export const useFileUpload = () => {
                         }
 
                         setTimeout(() => {
-                            router.push(`/analysis/${jobId}`)
+                            const encodedRedirectId = encodeURIComponent(jobId);
+                            router.push(`/analysis/${encodedRedirectId}`)
                         }, 1500)
 
                     } else if (job.status === 'failed') {
@@ -255,14 +266,13 @@ export const useFileUpload = () => {
     }, [])
 
     return {
-        ...uploadState,
+        uploadState,
         selectFile,
         uploadFile,
         resetUpload,
         cancelUpload,
         retryUpload,
         canUpload: uploadState.file !== null && !uploadState.isUploading,
-        processingStatus,
         jobId: processingJobId,
     }
 } 

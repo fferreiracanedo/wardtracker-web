@@ -51,6 +51,7 @@ export async function GET(
                 fileName: job.fileName,
                 status: job.status,
                 progress: Math.round(job.progress),
+                phase: job.phase,
                 estimatedTime: getEstimatedTime(),
                 createdAt: job.createdAt.toISOString(),
                 startedAt: job.startedAt?.toISOString(),
@@ -70,5 +71,46 @@ export async function GET(
             },
             { status: 500 }
         )
+    }
+}
+
+// DELETE - Cancelar um job
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const jobId = params.id;
+
+        if (!jobId) {
+            return NextResponse.json(
+                { success: false, message: 'ID do job é obrigatório' },
+                { status: 400 }
+            );
+        }
+
+        const wasCancelled = replayQueue.cancelJob(jobId);
+
+        if (!wasCancelled) {
+            return NextResponse.json(
+                { success: false, message: 'Não foi possível cancelar o job. Ele pode não existir ou já ter sido finalizado.' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: 'Job cancelado com sucesso.'
+        });
+
+    } catch (error) {
+        console.error('❌ Erro ao cancelar o job:', error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: error instanceof Error ? error.message : 'Erro interno'
+            },
+            { status: 500 }
+        );
     }
 } 

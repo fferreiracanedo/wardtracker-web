@@ -107,8 +107,6 @@ export async function POST(request: NextRequest) {
         // Adicionar à queue de processamento
         const queueJob = replayQueue.addJob(matchId, fileName)
 
-        console.log(`📋 Arquivo adicionado à queue: ${matchId}`)
-
         return NextResponse.json({
             success: true,
             message: 'Upload realizado com sucesso! Arquivo adicionado à fila de processamento.',

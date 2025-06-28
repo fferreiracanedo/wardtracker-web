@@ -54,6 +54,7 @@ module.exports = {
         "lol-gold": "#C8AA6E",
         "lol-blue": "#0596AA",
         "lol-dark": "#0F1419",
+        "lol-dark-blue": "#0a1428",
         gold: "#C8AA6E",
         blue: "#0596AA",
       },

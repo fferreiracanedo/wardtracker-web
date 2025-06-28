@@ -160,13 +160,15 @@ enum ReplayStatus {
 - [x] Implementar progress tracking real
 - [x] Configurar storage: local ou cloud (AWS S3/UploadThing)
 - [x] Implementar cleanup de arquivos antigos
+- [x] Implementar cancelamento e retry de uploads (frontend + backend)
 
 #### ⚡ **File Processing**
 
 - [x] Pesquisar/implementar parser de arquivos .rofl (mock)
 - [x] Criar queue system para processamento (Bull/Agenda)
 - [x] Implementar extração de dados do replay (mock)
-- [x] Configurar notificações de status
+- [x] Configurar notificações de status (progresso, fases e conclusão)
+- [x] Integrar status real da fila na interface de upload
 
 ### 📊 **1.4 WardScore Algorithm**
 
@@ -482,7 +484,7 @@ npm install --save-dev prettier eslint-config-prettier # formatting
 
 ---
 
-**📅 Última atualização**: Janeiro 2025  
+**📅 Última atualização**: Maio 2024  
 **👨‍💻 Responsável**: [Seu Nome]  
 **🔗 Repositório**: [wardtracker-web](https://github.com/fferreiracanedo/wardtracker-web)
 

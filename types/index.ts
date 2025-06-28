@@ -82,6 +82,7 @@ export interface UploadState {
     isUploading: boolean;
     error: string | null;
     status: 'idle' | 'uploading' | 'processing' | 'success' | 'error';
+    phase?: string;
 }
 
 // Tipos de API
@@ -287,4 +288,34 @@ export interface ComparisonCategory {
     advantage: "player1" | "player2" | "equal";
     difference: number;
     percentageDiff: number;
+}
+
+export interface QueueJob {
+    id: string;
+    status: 'waiting' | 'processing' | 'completed' | 'failed';
+    progress: number;
+    phase?: string;
+    createdAt: Date;
+    startedAt?: Date;
+    completedAt?: Date;
+    error?: string;
+    result?: any;
+}
+
+export interface PlayerAnalysis {
+    id: string;
+    playerName: string;
+    champion: string;
+    wardScore: number;
+    rank: string;
+    gameStats: {
+        duration: number;
+        wardsPlaced: number;
+        wardsDestroyed: number;
+        visionScore: number;
+        controlWardsPlaced: number;
+        role: string;
+        kda: string;
+        win: boolean;
+    };
 } 
