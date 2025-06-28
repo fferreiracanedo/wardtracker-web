@@ -206,12 +206,12 @@ class ReplayQueue {
     cleanup() {
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
 
-        for (const [id, job] of this.jobs.entries()) {
+        Array.from(this.jobs.entries()).forEach(([id, job]) => {
             if (job.createdAt < oneHourAgo) {
                 this.jobs.delete(id)
                 console.log(`🗑️ Job removido da queue: ${id}`)
             }
-        }
+        })
     }
 }
 

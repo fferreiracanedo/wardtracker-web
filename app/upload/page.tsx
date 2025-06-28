@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import FileUploadArea from "@/components/features/upload/FileUploadArea";
+import QueueInfo from "@/components/features/upload/QueueInfo";
 import {
   SuccessAnimation,
   ProgressSteps,
@@ -206,7 +207,7 @@ export default function UploadPage() {
         )}
 
         {/* Main Upload Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Upload Card */}
           <div className="lg:col-span-2">
             <Card
@@ -260,6 +261,11 @@ export default function UploadPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Queue Info Sidebar */}
+          <div className="space-y-6">
+            <QueueInfo />
           </div>
         </div>
 

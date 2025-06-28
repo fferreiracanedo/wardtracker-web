@@ -19,7 +19,11 @@ export default function FileUploadArea() {
     selectFile,
     uploadFile,
     resetUpload,
+    cancelUpload,
+    retryUpload,
     canUpload,
+    processingStatus,
+    jobId,
   } = useFileUpload();
 
   const [isDragOver, setIsDragOver] = useState(false);
@@ -80,6 +84,7 @@ export default function FileUploadArea() {
   };
 
   const getStatusDescription = () => {
+    if (isUploading && processingStatus) return processingStatus;
     if (isUploading) return "Por favor, aguarde...";
     if (file && !error) return "Clique em 'Enviar Replay' para continuar";
     if (error) return "Verifique o arquivo e tente novamente";
@@ -125,25 +130,47 @@ export default function FileUploadArea() {
 
           {/* File Info */}
           {file && !error && (
-            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-background rounded-lg border">
-              <File className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium">{file.name}</span>
-              <span className="text-xs text-muted-foreground">
-                ({formatFileSize(file.size)})
-              </span>
-              {!isUploading && (
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    resetUpload();
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 hover:bg-red-100"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
+            <div className="mx-auto max-w-md p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <File className="h-8 w-8 text-green-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-green-900 truncate">
+                    {file.name}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-green-700">
+                    <div>
+                      <span className="font-medium">Tamanho:</span>{" "}
+                      {formatFileSize(file.size)}
+                    </div>
+                    <div>
+                      <span className="font-medium">Tipo:</span>{" "}
+                      {file.type || "application/octet-stream"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Modificado:</span>{" "}
+                      {new Date(file.lastModified).toLocaleDateString("pt-BR")}
+                    </div>
+                    <div>
+                      <span className="font-medium">Status:</span> ✅ Válido
+                    </div>
+                  </div>
+                </div>
+                {!isUploading && (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      resetUpload();
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-red-100 text-red-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
@@ -166,14 +193,21 @@ export default function FileUploadArea() {
               <div className="flex items-center justify-center space-x-2">
                 <LoadingDots />
                 <span className="text-sm font-medium text-blue-700">
-                  Processando...
+                  {status === "processing"
+                    ? "Processando na fila..."
+                    : "Enviando..."}
                 </span>
               </div>
               <Progress value={progress} className="w-full h-2" />
               <div className="flex justify-between text-xs text-blue-600">
                 <span>{progress}% concluído</span>
-                <span>Analisando replay...</span>
+                <span>{processingStatus || "Analisando replay..."}</span>
               </div>
+              {jobId && (
+                <div className="text-center text-xs text-blue-500">
+                  ID: {jobId}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -181,35 +215,57 @@ export default function FileUploadArea() {
 
       {/* Action Buttons */}
       <div className="flex justify-center space-x-4">
-        <Button
-          onClick={uploadFile}
-          disabled={!canUpload}
-          size="lg"
-          className="px-8 min-w-[160px]"
-        >
-          {isUploading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-              Enviando...
-            </>
-          ) : (
-            <>
-              <Upload className="mr-2 h-4 w-4" />
-              Enviar Replay
-            </>
-          )}
-        </Button>
+        {/* Upload/Retry Button */}
+        {error ? (
+          <Button
+            onClick={retryUpload}
+            size="lg"
+            className="px-8 min-w-[160px]"
+            variant="default"
+          >
+            🔄 Tentar Novamente
+          </Button>
+        ) : (
+          <Button
+            onClick={uploadFile}
+            disabled={!canUpload}
+            size="lg"
+            className="px-8 min-w-[160px]"
+          >
+            {isUploading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                {status === "processing" ? "Processando..." : "Enviando..."}
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Enviar Replay
+              </>
+            )}
+          </Button>
+        )}
 
-        {file && !isUploading && (
+        {/* Cancel/Clear Button */}
+        {isUploading ? (
+          <Button
+            onClick={cancelUpload}
+            variant="outline"
+            size="lg"
+            className="min-w-[120px] border-red-200 text-red-600 hover:bg-red-50"
+          >
+            ✕ Cancelar
+          </Button>
+        ) : file && !error ? (
           <Button
             onClick={resetUpload}
             variant="outline"
             size="lg"
             className="min-w-[120px]"
           >
-            Limpar
+            🗑️ Limpar
           </Button>
-        )}
+        ) : null}
       </div>
 
       {/* Help Text */}

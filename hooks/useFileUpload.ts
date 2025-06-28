@@ -36,6 +36,27 @@ export const useFileUpload = () => {
         }
     }, [])
 
+    const cancelUpload = useCallback(() => {
+        // Parar polling
+        if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current)
+            pollIntervalRef.current = null
+        }
+
+        setUploadState(prev => ({
+            ...prev,
+            isUploading: false,
+            status: 'idle',
+            progress: 0,
+            error: null
+        }))
+        setProcessingStatus('')
+
+        toast.info('Upload cancelado')
+    }, [])
+
+
+
     const validateFile = useCallback((file: File): string | null => {
         // Validar extensão
         if (!validateRoflFile(file)) {
@@ -46,6 +67,23 @@ export const useFileUpload = () => {
         const maxSize = 50 * 1024 * 1024 // 50MB
         if (file.size > maxSize) {
             return `Arquivo muito grande. Tamanho máximo: 50MB. Seu arquivo: ${formatFileSize(file.size)}`
+        }
+
+        // Validar tamanho mínimo (1MB)
+        const minSize = 1 * 1024 * 1024 // 1MB
+        if (file.size < minSize) {
+            return `Arquivo muito pequeno. Replays geralmente têm pelo menos 1MB. Seu arquivo: ${formatFileSize(file.size)}`
+        }
+
+        // Validar nome do arquivo
+        if (file.name.length > 200) {
+            return 'Nome do arquivo muito longo. Máximo 200 caracteres.'
+        }
+
+        // Verificar se contém caracteres especiais válidos
+        const validNamePattern = /^[a-zA-Z0-9\s\-_.()]+\.rofl$/i
+        if (!validNamePattern.test(file.name)) {
+            return 'Nome do arquivo contém caracteres inválidos. Use apenas letras, números, espaços e os símbolos: - _ . ( )'
         }
 
         return null
@@ -133,6 +171,12 @@ export const useFileUpload = () => {
         }
     }, [uploadState.file, router])
 
+    const retryUpload = useCallback(() => {
+        if (uploadState.file) {
+            uploadFile()
+        }
+    }, [uploadState.file, uploadFile])
+
     // Polling do status de processamento
     const startStatusPolling = useCallback((jobId: string) => {
         pollIntervalRef.current = setInterval(async () => {
@@ -215,6 +259,8 @@ export const useFileUpload = () => {
         selectFile,
         uploadFile,
         resetUpload,
+        cancelUpload,
+        retryUpload,
         canUpload: uploadState.file !== null && !uploadState.isUploading,
         processingStatus,
         jobId: processingJobId,
