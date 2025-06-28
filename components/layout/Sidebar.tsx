@@ -36,11 +36,11 @@ const navItems = [
 const SidebarHeader = ({ isCollapsed }: { isCollapsed: boolean }) => (
   <div
     className={cn(
-      "flex items-center p-4 border-b h-20",
+      "flex items-center py-4 border-b h-20",
       isCollapsed ? "justify-center" : "justify-between"
     )}
   >
-    <Link href="/" className="flex items-center space-x-3 group min-w-0">
+    <Link href="/" className="flex items-center space-x-3 px-5 group min-w-0">
       <div className="w-10 h-10 bg-gradient-to-br from-lol-gold to-lol-blue rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-primary/20 transition-shadow duration-300 flex-shrink-0">
         <Crown className="h-6 w-6 text-white" />
       </div>
@@ -65,7 +65,7 @@ const NavLink = ({ item, isCollapsed, isActive, onClick }: any) => {
       href={item.href}
       onClick={onClick}
       className={cn(
-        "flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
+        "flex items-center space-x-3 rounded-lg px-2 py-2.5 transition-all duration-200 group relative",
         isActive
           ? "bg-primary/10 text-primary font-semibold"
           : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
@@ -121,7 +121,7 @@ const ProBanner = ({ isCollapsed }: { isCollapsed: boolean }) => {
 const SidebarFooter = ({ isCollapsed }: { isCollapsed: boolean }) => (
   <div className="px-4 py-3 border-t">
     {isCollapsed ? (
-      <div className="space-y-3">
+      <div className="flex flex-col items-center space-y-3">
         <ThemeToggle iconOnly />
         <LoginButton isCollapsed={isCollapsed} />
       </div>
@@ -147,9 +147,9 @@ const SidebarContent = ({ isCollapsed, closeSidebar }: any) => {
     href === "/" ? pathname === href : pathname.startsWith(href);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full px-4">
       <SidebarHeader isCollapsed={isCollapsed} />
-      <nav className="p-3 space-y-1.5 overflow-y-auto">
+      <nav className="py-3 space-y-1.5 overflow-y-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.href}
@@ -200,7 +200,7 @@ export default function Sidebar({ className }: { className?: string }) {
       {/* Sidebar for Desktop */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col bg-background border-r transition-all duration-300",
+          "hidden lg:flex flex-col bg-background border-r relative transition-all duration-300",
           isDesktopCollapsed ? "w-20" : "w-64",
           className
         )}
@@ -210,7 +210,7 @@ export default function Sidebar({ className }: { className?: string }) {
           variant="ghost"
           size="icon"
           onClick={toggleDesktopCollapse}
-          className="absolute top-1/2 -right-4 -translate-y-1/2 bg-background border rounded-full w-8 h-8 hover:bg-muted"
+          className="absolute top-4 -right-4 bg-background border rounded-full w-8 h-8 hover:bg-muted"
         >
           {isDesktopCollapsed ? (
             <ChevronRight className="h-4 w-4" />
